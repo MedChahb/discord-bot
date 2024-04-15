@@ -1,13 +1,8 @@
-﻿using DSharpPlus.CommandsNext;
+﻿using DiscordBot.methode_auxiliaire;
+using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
-using System.Threading.Tasks;
-using DiscordBot.methode_auxiliaire;
 using System.Collections.Generic;
-using System.Collections;
-using System;
-using System.Threading;
-using Microsoft.SqlServer.Server;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace DiscordBot.commands
 {

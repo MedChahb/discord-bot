@@ -1,12 +1,10 @@
-﻿using DSharpPlus;
-using System.Threading.Tasks;
+﻿using DiscordBot.commands;
 using DiscordBot.config;
+using DiscordBot.methode_auxiliaire;
+using DSharpPlus;
 using DSharpPlus.CommandsNext;
 using System;
-using DiscordBot.commands;
-using DiscordBot.methode_auxiliaire;
-using System.Collections.Generic;
-using System.Linq;
+using System.Threading.Tasks;
 
 namespace DiscordBot.Bot
 {
