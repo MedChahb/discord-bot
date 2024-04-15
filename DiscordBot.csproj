@@ -142,8 +142,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bot\Bot.cs" />
+    <Compile Include="bot\Bot.cs" />
+    <Compile Include="commands\Commands.cs" />
     <Compile Include="config\JsonReader.cs" />
+    <Compile Include="helperMethodes\Methodes.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
