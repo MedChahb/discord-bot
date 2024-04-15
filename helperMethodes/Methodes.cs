@@ -23,7 +23,8 @@ namespace DiscordBot.methode_auxiliaire
             {
                 // If the file doesn't exist, create it and write today's date
                 File.WriteAllText("last_call_date.txt", today.ToString());
-                return GetRandomElement(stringList);
+                int randomIndexx = new Random().Next(0, stringList.Count);
+                return stringList[randomIndexx];
             }
 
             // Read the last call date from the file
@@ -36,7 +37,7 @@ namespace DiscordBot.methode_auxiliaire
                 if (today == lastCallDate.Date)
                 {
                     // Return the same element as last time
-                    return GetLastReturnedElement(stringList);
+                    return stringList.FirstOrDefault();
                 }
             }
 
@@ -50,22 +51,6 @@ namespace DiscordBot.methode_auxiliaire
             // Return the randomly selected element
             return randomElement;
         }
-        // Helper method to get the last returned element from the list
-        public static string GetRandomElement(List<string> stringList)
-        {
-            // Generate a random index for the list
-            int randomIndex = new Random().Next(0, stringList.Count);
-            string randomElement = stringList[randomIndex];
-
-            return randomElement;
-        }
-        private static string GetLastReturnedElement(List<string> stringList)
-        {
-            // Implement logic to get the last returned element from the list
-            // For now, just return the first element
-            return stringList.FirstOrDefault();
-        }
-
 
         public static async Task SetMembersOfRoleAtReady(DiscordClient sender, ReadyEventArgs args, ulong GuildId, string roleName)
         {
