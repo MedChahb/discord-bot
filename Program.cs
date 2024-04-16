@@ -1,7 +1,4 @@
-﻿using DSharpPlus;
-using DSharpPlus.CommandsNext;
-using System;
-using System.Runtime.CompilerServices;
+﻿using System.Drawing;
 using System.Threading.Tasks;
 
 namespace DiscordBot
@@ -13,5 +10,7 @@ namespace DiscordBot
             Bot.Bot DiscordBot = new Bot.Bot(); // instance du Bot
             await Task.Delay(-1); // infinite delay -> bot stays connected
         }
+
+
     }
 }
