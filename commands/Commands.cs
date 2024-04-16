@@ -1,11 +1,14 @@
-﻿using DiscordBot.methode_auxiliaire;
+﻿using DiscordBot.games;
+using DiscordBot.methode_auxiliaire;
 using DSharpPlus.CommandsNext;
 using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Net;
+using System.Runtime.Remoting.Contexts;
 using System.Threading.Tasks;
 
 namespace DiscordBot.commands
@@ -13,6 +16,9 @@ namespace DiscordBot.commands
     public class Commands : BaseCommandModule
     {
         public static List<string> MembersOfRole = new List<string>();
+
+        public bool InTTTGame = false;
+        public TicTacToe XOGame = new TicTacToe();
 
         //to test for tomorrow
         [Command("TodaysZaml")]
@@ -75,5 +81,32 @@ namespace DiscordBot.commands
             // Send the embed
             await ctx.RespondAsync(embed: embed);
         }
+
+        //generation of image is wokring, but NOT SENDING THE IMAGE
+        [Command("XO")]
+        [Description("Start TicTacToe game.")]
+        public async Task XO(CommandContext ctx, int row, int col)
+        {
+            XOGame.PlaceSymbol(row, col, 'X');
+            XOGame.SaveGameState();
+
+            // Create an embed with the image URL
+            var embed = new DiscordEmbedBuilder
+            {
+                Title = "XO",
+                ImageUrl = "attachment://XO.jpg", // NOT WORKING
+                Color = DiscordColor.Red,
+                
+            };
+
+            // Send the embed with the image as an attachment
+            await ctx.RespondAsync(embed: embed);
+
+            //start all over if ended
+            if (false) // if ended
+                this.XOGame = new TicTacToe();
+
+        }
+    
     }
 }
