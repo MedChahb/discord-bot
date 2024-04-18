@@ -5,6 +5,7 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Threading.Tasks;
 
@@ -15,7 +16,6 @@ namespace DiscordBot.commands
     {
         public static List<string> MembersOfRole = new List<string>();
 
-        public bool InTTTGame = false;
         public TicTacToe XOGame = new TicTacToe();
 
         //to test for tomorrow
@@ -26,7 +26,7 @@ namespace DiscordBot.commands
             var embedMSG = new DiscordEmbedBuilder
             {
                 Title = "ZAML",
-                Description = $"Today's Zamel : {Methodes.GetRandomElementPerDay(MembersOfRole)} 💅❤️",
+                Description = $"Today's Zamel : {Methodes.GetRandomElementPerDay(MembersOfRole)}  💅❤️",
             };
             await ctx.RespondAsync(embedMSG);
         }
@@ -73,30 +73,40 @@ namespace DiscordBot.commands
             var embed = new DiscordEmbedBuilder
             {
                 Title = "BZZL",
-                ImageUrl = "https://images-ext-2.discordapp.net/external/am6NQ7MxzdfF-sRwl_pRYJ7hAfkX_RGlcdqfJzOvSFc/https/cdn.boob.bot/boobs/80008C77.gif"
+                ImageUrl = "https://images-ext-2.discordapp.net/external/am6NQ7MxzdfF-sRwl_pRYJ7hAfkX_RGlcdqfJzOvSFc/https/cdn.boob.bot/boobs/80008C77.gif",
+                Color = DiscordColor.Red
             };
 
             // Send the embed
             await ctx.RespondAsync(embed: embed);
         }
 
-        //generation of image is wokring, but NOT SENDING THE IMAGE
+        // stop taging urself
         [Command("XO")]
         [Description("Start TicTacToe game.")]
         public async Task XO(CommandContext ctx, DiscordMember member)
         {
-            if (XOGame.isFirstRound)
+            if(ctx.User.Id == member.Id) await ctx.RespondAsync("You cant play againt yourself.");
+            else if (XOGame.isNotStarted)
             {
                 XOGame.SetStarter((DiscordMember)ctx.User);
+                XOGame.SetFirstTurn((DiscordMember)ctx.User);
                 XOGame.SetVersus(member);
 
                 var embedMSG = new DiscordEmbedBuilder
                 {
-                    Title = $"{((DiscordMember)(ctx.User)).DisplayName} vs {member.DisplayName}",
-                    Description = XOGame.DisplayXOGrid(),
+                    Title = $"__{((DiscordMember)(ctx.User)).DisplayName}__ VS __{member.DisplayName}__",
+                    Description = "**" + XOGame.DisplayXOGrid() + "**",
+                    Color = DiscordColor.Red,
+                    Footer = new DiscordEmbedBuilder.EmbedFooter
+                    {
+                        Text = "Use !XO <col> <row> to play.",
+                    }
                 };
                 XOGame.HasStarted();
                 await ctx.RespondAsync(embedMSG);
+                await ctx.Channel.SendMessageAsync($"{XOGame.turn.Mention} to play.");
+
             }
             else
             {
@@ -108,21 +118,79 @@ namespace DiscordBot.commands
         [Description("Start TicTacToe game.")]
         public async Task XO(CommandContext ctx, int col, int row)
         {
-            if (XOGame.isFirstRound)
+
+            if (XOGame.isNotStarted)
             {
                 await ctx.RespondAsync($"no running game, try !XO <Mention>.");
             }
             else
             {
-                var embedMSG = new DiscordEmbedBuilder
+                // 1-3 -> 0-2
+                col -= 1; row -= 1;
+                
+                // if User is the one to play -> OK!
+                if (ctx.User.Id == XOGame.turn.Id)
                 {
-                    Title = $"{XOGame.starter.DisplayName} vs {XOGame.versus.DisplayName}",
-                    Description = XOGame.DisplayXOGrid(),
-                };
-                await ctx.RespondAsync(embedMSG);
+                    if (!(col >= 0 && col <= 2 && row >= 0 && row <= 2))
+                    {
+                        await ctx.Channel.SendMessageAsync($"Invalid position, out of board range");
+                        return;
+                    }
+                    // check which char to place based on the User (starter -> X, versus -> O)
+                    if (XOGame.isCellEmpty(col, row))
+                    {
+                        if (ctx.User.Id == XOGame.starter.Id) XOGame.PlaceX(col, row);
+                        else if (ctx.User.Id == XOGame.versus.Id) XOGame.PlaceO(col, row);
+                    }
+                    else
+                    {
+                        await ctx.Channel.SendMessageAsync($"Invalid position, taken.");
+                        return;
+                    }
+
+                    var embedMSG = new DiscordEmbedBuilder
+                    {
+                        Title = $"__{XOGame.starter.DisplayName}__ VS __{XOGame.versus.DisplayName}__",
+                        Description = "**"+XOGame.DisplayXOGrid()+"**",
+                        Color = DiscordColor.Red,
+                        Footer = new DiscordEmbedBuilder.EmbedFooter
+                        {
+                            Text = "Use !XO <col> <row> to play.",
+                        }
+                    };
+                    XOGame.ChangeTurn();
+                    await ctx.RespondAsync(embedMSG);
+
+                    if (XOGame.Draw())      { await ctx.Channel.SendMessageAsync($"**Draw**"); this.XOGame = new TicTacToe(); }
+                    else if (XOGame.Win())  { await ctx.Channel.SendMessageAsync($"**Winner**: {XOGame.winner.Mention}"); this.XOGame = new TicTacToe(); }
+                    else                      await ctx.Channel.SendMessageAsync($"{XOGame.turn.Mention} to play.");
+                }
+                else
+                {
+                    await ctx.Channel.SendMessageAsync($"Not your turn. Waiting for {XOGame.turn.Mention}");
+                }
+
+                
             }
             
         }
 
+        [Command("XO")]
+        [Description("Start TicTacToe game.")]
+        public async Task XO(CommandContext ctx, string s)
+        {
+            if(string.Equals("end", s, StringComparison.OrdinalIgnoreCase))
+            {
+                if (ctx.User.Id == XOGame.starter.Id || ctx.User.Id == XOGame.versus.Id)
+                {
+                    this.XOGame = new TicTacToe();
+                    await ctx.RespondAsync("The game has ended.");
+                }
+            }
+            else
+            {
+                await ctx.RespondAsync("Do you mean : !XO end ?");
+            }
+        }
     }
 }
