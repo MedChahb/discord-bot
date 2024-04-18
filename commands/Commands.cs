@@ -5,11 +5,9 @@ using DSharpPlus.CommandsNext.Attributes;
 using DSharpPlus.Entities;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
-using System.Net;
-using System.Runtime.Remoting.Contexts;
 using System.Threading.Tasks;
+
 
 namespace DiscordBot.commands
 {
@@ -85,28 +83,46 @@ namespace DiscordBot.commands
         //generation of image is wokring, but NOT SENDING THE IMAGE
         [Command("XO")]
         [Description("Start TicTacToe game.")]
-        public async Task XO(CommandContext ctx, int row, int col)
+        public async Task XO(CommandContext ctx, DiscordMember member)
         {
-            XOGame.PlaceSymbol(row, col, 'X');
-            XOGame.SaveGameState();
-
-            // Create an embed with the image URL
-            var embed = new DiscordEmbedBuilder
+            if (XOGame.isFirstRound)
             {
-                Title = "XO",
-                ImageUrl = "attachment://XO.jpg", // NOT WORKING
-                Color = DiscordColor.Red,
-                
-            };
+                XOGame.SetStarter((DiscordMember)ctx.User);
+                XOGame.SetVersus(member);
 
-            // Send the embed with the image as an attachment
-            await ctx.RespondAsync(embed: embed);
-
-            //start all over if ended
-            if (false) // if ended
-                this.XOGame = new TicTacToe();
-
+                var embedMSG = new DiscordEmbedBuilder
+                {
+                    Title = $"{((DiscordMember)(ctx.User)).DisplayName} vs {member.DisplayName}",
+                    Description = XOGame.DisplayXOGrid(),
+                };
+                XOGame.HasStarted();
+                await ctx.RespondAsync(embedMSG);
+            }
+            else
+            {
+                await ctx.RespondAsync("Wait for the game to end.");
+            }
         }
-    
+
+        [Command("XO")]
+        [Description("Start TicTacToe game.")]
+        public async Task XO(CommandContext ctx, int col, int row)
+        {
+            if (XOGame.isFirstRound)
+            {
+                await ctx.RespondAsync($"no running game, try !XO <Mention>.");
+            }
+            else
+            {
+                var embedMSG = new DiscordEmbedBuilder
+                {
+                    Title = $"{XOGame.starter.DisplayName} vs {XOGame.versus.DisplayName}",
+                    Description = XOGame.DisplayXOGrid(),
+                };
+                await ctx.RespondAsync(embedMSG);
+            }
+            
+        }
+
     }
 }
